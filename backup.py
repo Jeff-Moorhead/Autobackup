@@ -4,21 +4,23 @@ Backup my files.
 
 import os
 import zipfile
+import datetime
 
 
 def backup(src, dest):
     """Backup files from src to dest."""
     base = os.path.basename(src)
+    now = datetime.datetime.now()
+    newFile = f'{base}_{now.month}-{now.day}-{now.year}.zip'
 
     # Set the current working directory.
     os.chdir(dest)
 
-    # If the zip file already exists, delete the old one.
-    if os.path.exists(f'{base}.zip'):
-        os.unlink(f'{base}.zip')
+    if os.path.exists(newFile):
+        os.unlink(newFile)
 
     # Write the zipfile and walk the source directory tree.
-    with zipfile.ZipFile(f'{base}.zip', 'w') as zip:
+    with zipfile.ZipFile(newFile, 'w') as zip:
         for folder, subfolders, files in os.walk(src):
             print(f'Working in folder {os.path.basename(folder)}')
             for file in files:

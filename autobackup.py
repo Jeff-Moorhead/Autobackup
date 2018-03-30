@@ -10,27 +10,31 @@ from sys import exit
 from time import sleep
 from backup import backup
 
+documents = "C:\\Users\\Jmoor\\OneDrive\\Documents"
+desktop = "C:\\Users\\Jmoor\\Desktop"
+
 # Check if computer should shut down after backups.
 shutdown = input('Shut down after backups (y/n)? ')
 
 # If neither backup drive exists, shutdown the computer.
 if not (os.path.exists("F:\\") or os.path.exists("E:\\")):
 	print("---------- Backup failed: Drives not available! ----------")
-	sleep(10)
+	sleep(3)
+	exit(1)
 else:
 	# Perform backups.
 	if os.path.exists("E:\\"):
-		backup("C:\\Users\\Jmoor\\Desktop", "E:\\")
-		backup("C:\\Users\\Jmoor\\OneDrive\\Documents", "E:\\")
+		backup(desktop, "E:\\")
+		backup(documents, "E:\\")
 		#backup("C:\\Users\\Jeff Moorhead\\Pictures", "E:\\")
 		
 	if os.path.exists("F:\\"):
-		backup("C:\\Users\\Jmoor\\Desktop", "F:\\")
-		backup("C:\\Users\\Jmoor\\OneDrive\\Documents", "F:\\")
+		backup(desktop, "F:\\")
+		backup(documents, "F:\\")
 		#backup("C:\\Users\\Jeff Moorhead\\Pictures", "F:\\")
 
 if shutdown == 'y':
         os.system('shutdown /s /t 10')
 else:
-        sleep(10)
-        exit()
+        sleep(5)
+        exit(0)
