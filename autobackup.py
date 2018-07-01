@@ -1,41 +1,40 @@
-"""
-Automatically backup any folder to a zip file using backup.py.
-Differs from autobackup.pyw in that this version is designed to run
-with Windows Task Scheduler so that it doesn't have to be constantly
-running in the background.
-"""
+#! python3
 
 import os
-import sys
-from time import sleep
-from backup import backup
+import backup
+import argparse
+import win32api
+import logging
+
+logging.basicConfig(level=logging.NOTSET, format='%(message)s')
+# logging.disable(logging.CRITICAL)
 
 documents = "C:\\Users\\Jmoor\\OneDrive\\Documents"
 desktop = "C:\\Users\\Jmoor\\OneDrive\\Desktop"
-drive1 = sys.argv[1]
-drive2 = sys.argv[2]
-# Check if computer should shut down after backups.
-shutdown = input('Shut down after backups (y/n)? ')
+drives = win32api.GetLogicalDriveStrings().split('\\\000')[:-1]
+drives.remove('C:')
 
-# If neither backup drive exists, shutdown the computer.
-if not (os.path.exists(drive1 + '\\') or os.path.exists(drive2 + '\\')):
-	print("---------- Backup failed: Drives not available! ----------")
-	sleep(3)
-	sys.exit(1)
-else:
-	# Perform backups.
-	if os.path.exists(f'{drive1}\\'):
-		backup(desktop, f'{drive1}\\')
-		backup(documents, f'{drive1}\\')
-		#backup("C:\\Users\\Jeff Moorhead\\Pictures", "E:\\")
-		
-	if os.path.exists(f'{drive2}\\'):
-		backup(desktop, f'{drive2}\\')
-		backup(documents, f'{drive2}\\')
-		#backup("C:\\Users\\Jeff Moorhead\\Pictures", "F:\\")
+parser = argparse.ArgumentParser()
+parser.add_argument('drives', nargs='*', type=str, choices=drives, help='A backup drive.')
+parser.add_argument('-r', '--remove', nargs='?', const=7, type=int, help='Remove old backups. If an integer value is specified, backups at least n days'
+	+ ' old will be removed. If no integer is given, the default value of seven days will'
+	+ ' be used.')
+parser.add_argument('-s', '--shutdown', action='store_true', help='Shutdown when backups finish')
+args = parser.parse_args()
 
-if shutdown == 'y':
-        os.system('shutdown /s /t 3')
-else:
-        sleep(3)
-        sys.exit(0)
+for drive in args.drives:
+	if not os.path.exists(drive):
+		print(f'{drive} not found. Backup failed.')
+	else:
+		backup.check_for_backups(drive)
+		print(f'Backing up to drive {drive}...')
+		print('Backing up documents...')
+		backup.backup(documents, drive)
+		print(f'----------Backup to {drive} complete!-----------')
+		if args.remove:
+			logging.info(f'Removing backups older than {args.remove} days.')
+			backup.remove_old_backups(args.remove, drive)
+			
+if args.shutdown:
+	logging.info('Shutting down...')
+	os.system('shutdown /s /t 5')

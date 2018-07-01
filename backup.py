@@ -1,14 +1,23 @@
-"""
-Backup my files.
-"""
+#! python3
 
 import os
 import zipfile
 import datetime
+import re
+
+
+def check_for_backups(folder):
+    today = datetime.datetime.today()
+    file_regex = re.compile(rf'(\w+)_{today.month}-{today.day}-{today.year}.zip')
+    files = filter(lambda file: file_regex.match(file), os.listdir(folder))
+    for file in files:
+        os.remove(f'{folder}\\{file}')
 
 
 def backup(src, dest):
-    """Backup files from src to dest."""
+    if not os.path.exists(src):
+        raise FileNotFoundError(f'{src} is not a valid path.')
+
     base = os.path.basename(src)
     now = datetime.datetime.now()
     newFile = f'{base}_{now.month}-{now.day}-{now.year}.zip'
@@ -16,38 +25,26 @@ def backup(src, dest):
     # Set the current working directory.
     os.chdir(dest)
 
-    if os.path.exists(newFile):
-        os.unlink(newFile)
-        newFile = f'{base}_{now.month}-{now.day}-{now.year}_OVERWRITE.zip'
-
     # Write the zipfile and walk the source directory tree.
     with zipfile.ZipFile(newFile, 'w') as zip:
         for folder, _ , files in os.walk(src):
-            print(f'Working in folder {os.path.basename(folder)}')
-
             for file in files:
                 zip.write(os.path.join(folder, file),
-                          arcname=os.path.join(
-                              folder[len(src):], file),
-                          compress_type=zipfile.ZIP_DEFLATED)
-        print(
-            f'\n---------- Backup of {base} to {dest} successful! ----------\n')
+                        arcname=os.path.join(
+                            folder[len(src):], file),
+                        compress_type=zipfile.ZIP_DEFLATED)
+                
 
-
-if __name__ == '__main__':
-    # The destination folder.
-    destination = input('Backup to which drive? ')
-
-    # The source folder.
-    source = input('Backup which folder? ')
-
-    shutdown = input('Shutdown after backup (y/n)? ')
-    if shutdown == shutdown.lower() == 'y':
-        print('The computer will shut down 10 seconds after backup.')
-
-    print('Starting backup...')
-
-    backup(source, destination)
-
-    if shutdown.lower == 'y':
-        os.system('shutdown /s /t 10')
+def remove_old_backups(time, folder):
+    file_regex = re.compile(r'(\w+)_(\d+)-(\d+)-(\d+).zip')
+    files = list(filter(lambda file: file_regex.match(file), os.listdir(folder)))
+    counter = 0
+    for file in files:
+        date_created = os.path.getctime(f'{folder}\\{file}')
+        time_elapsed = datetime.datetime.today() - datetime.datetime.fromtimestamp(date_created)
+        if time_elapsed.days >= time:
+            try:
+                os.remove(f'{folder}\\{file}')
+                counter += 1
+            except PermissionError:
+                print(f'Access denied to {file}!')
