@@ -1,0 +1,11 @@
+Metadata-Version: 1.1
+Name: backup
+Version: 0.0.1
+Summary: A package to backup files.
+Home-page: https://github.com/Jeff-Moorhead/Autobackup
+Author: Jeff Moorhead
+Author-email: jeff.moorhead1@gmail.com
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
